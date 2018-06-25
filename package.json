@@ -1,0 +1,25 @@
+{
+  "name": "nl_test",
+  "version": "1.0.0",
+  "description": "mandy is best in OL or obsidan",
+  "main": "app.js",
+  "scripts": {
+    "start": "webpack"
+  },
+  "author": "Nolan Locke",
+  "license": "ISC",
+  "dependencies": {
+    "@types/node": "^8.0.27",
+    "babel-loader": "^7.1.2",
+    "emitter": "^0.0.5",
+    "http-server": "^0.11.1",
+    "json-loader": "^0.5.7",
+    "ts-loader": "^2.2.2",
+    "typescript": "^2.5.2",
+    "webpack": "^3.5.6",
+    "x-ray": "^2.3.3"
+  },
+  "devDependencies": {
+    "webpack-dev-server": "^2.7.1"
+  }
+}
