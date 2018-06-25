@@ -9,6 +9,8 @@ interface IMvpData {
     where: string;
 }
 
+const PORT = process.env.port || 3000;
+
 const map = new Map<string, IMvpData>();
 
 const s = new http.Server((req, res) => {
@@ -43,7 +45,7 @@ const s = new http.Server((req, res) => {
     });
 });
 
-s.listen(3000, (err) => {
+s.listen(PORT, (err) => {
     if (err) {
         console.error('error', err);
     }
