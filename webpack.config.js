@@ -56,7 +56,6 @@ module.exports = {
     warnings: true,
     assets: true
   },
-  watch: true,
   target: "node",
   devtool: 'source-map'
 }

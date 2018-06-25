@@ -4,7 +4,8 @@
   "description": "mandy is best in OL or obsidan",
   "main": "app.js",
   "scripts": {
-    "start": "webpack"
+    "start:dev": "webpack --watch",
+    "start": "webpack && node dist/bundle.js"
   },
   "author": "Nolan Locke",
   "license": "ISC",
