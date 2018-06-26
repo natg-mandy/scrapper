@@ -1,7 +1,7 @@
 {
   "name": "nl_test",
   "version": "1.0.0",
-  "description": "mandy is best in OL or obsidan",
+  "description": "",
   "main": "app.js",
   "scripts": {
     "start:dev": "webpack --watch",
@@ -19,6 +19,7 @@
     "lodash": "^4.17.10",
     "moment": "^2.22.2",
     "moment-timezone": "^0.5.21",
+    "rxjs": "5.5.10",
     "ts-loader": "^2.2.2",
     "typescript": "^2.5.2",
     "webhook-discord": "^2.3.0",

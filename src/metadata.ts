@@ -2,20 +2,20 @@
 export const metadata = {
   map: {
     'abbey02': {},
-    'prt_sewb4': {},
-    'gef_fild14': {},
-    'pay_fild11': {},
-    'moc_pryd06': {},
-    'beach_dun': {},
-    'odin_tem03': {},
-    'moc_fild22': {},
-    'thor_v03': {},
     'ama_dun03': {},
+    'anthell02': {},
+    'beach_dun': {},
+    'gef_fild14': {},
     'kh_dun02': {},
-    'ra_san05': {},
     'lou_dun03': {},
-    'tur_dun04': {},
-    'anthell02': {}
+    'moc_fild22': {},
+    'moc_pryd06': {},
+    'odin_tem03': {},
+    'pay_fild11': {},
+    'prt_sewb4': {},
+    'ra_san05': {},
+    'thor_v03': {},
+    'tur_dun04': {}
   },
   mvp: {
     'Bacsojin': {

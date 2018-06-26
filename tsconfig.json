@@ -2,14 +2,14 @@
   "compilerOptions": {
     "sourceMap": true,
     "target": "es6",
-  "baseUrl": "./src",
-  "paths": {
-    "*": [
-      "node_modules/*",
-      "*"
-    ]
-  },
-  "moduleResolution": "node"
-
+    "baseUrl": "./src",
+    "paths": {
+      "*": [
+        "node_modules/*",
+        "*"
+      ]
+    },
+    "moduleResolution": "node",
+    "experimentalDecorators": true
   }
 }

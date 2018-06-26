@@ -8,10 +8,7 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Program",
-            "program": "${workspaceFolder}\\dist\\bundle.js",
-            // "outFiles": [
-            //     "${workspaceFolder}/**/*.js"
-            // ]
+            "program": "${workspaceFolder}\\dist\\bundle.js"
         }
     ]
 }
