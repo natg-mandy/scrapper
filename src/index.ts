@@ -29,7 +29,12 @@ const mvpMap = new Map<string, IMvpData>();
 
 const s = new http.Server(async (req, res) => {
     var data = await getMvpData();
-    res.end(JSON.stringify(data));
+    var newData = data.map(d => {
+        var newD = Object.assign({}, d);
+        newD.timeLeft = Utils.secondsLeft(d.respawn);
+        return newD;
+    })
+    res.end(JSON.stringify(newData));
 });
 
 s.listen(PORT, (err) => {

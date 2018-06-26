@@ -14,7 +14,8 @@ export const metadata = {
     'kh_dun02': {},
     'ra_san05': {},
     'lou_dun03': {},
-    'tur_dun04': {}
+    'tur_dun04': {},
+    'anthell02': {}
   },
   mvp: {
     'Bacsojin': {
