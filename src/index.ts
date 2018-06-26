@@ -7,7 +7,16 @@ import { Utils } from 'utils';
 import { orderBy } from 'lodash';
 import { Observable, Subject } from 'rxjs';
 
-interface IMvpData {
+export interface IReadableMvpData {
+    WHO_KILLED_LAST: string;
+    MAP_NAME: string;
+    DATE__RESPAWN: Date;
+    DATE__DEATH: Date;
+    MINUTES_UNTIL_RESPAWN: string;
+    MVP_NAME: string;
+}
+
+export interface IMvpData {
     when: Date;
     who: string;
     mvp: string;
@@ -35,7 +44,7 @@ const s = new http.Server(async (req, res) => {
     var latest = [];
 
     mvpMap.forEach(d => {
-        latest.push(d);
+        latest.push(Utils.getReadable(d));
     });
 
     res.end(JSON.stringify(latest));

@@ -1,5 +1,6 @@
 import * as rx from 'rxjs';
 import * as mmm from 'moment';
+import { IMvpData, IReadableMvpData } from 'index';
 var moment = mmm;
 export class Utils {
 
@@ -24,5 +25,20 @@ export class Utils {
 
   public static broadcast(webhook, msg: string) {
     webhook.custom("mvp-bot", msg, 'MVP Spawning Soon', "#0aaf94");
+  }
+
+  public static getReadable(data: IMvpData): IReadableMvpData {
+    return {
+      DATE__DEATH: data.when,
+      DATE__RESPAWN: data.respawn,
+      MAP_NAME: data.mapName,
+      MINUTES_UNTIL_RESPAWN: this.msToMinute(data.respawn.getTime() - new Date().getTime()),
+      MVP_NAME: data.mvp,
+      WHO_KILLED_LAST: data.who
+    };
+  }
+
+  public static msToMinute(val: number): string {
+    return (val / 60 / 1000).toFixed(2);
   }
 }
