@@ -141,7 +141,8 @@ function parse(table: string) {
             return null;
         }
 
-        var timeToRespawn = metadata.mvp[mvp].timer;
+        var mvpMeta = metadata.mvp[mvp];
+        var timeToRespawn = (mvpMeta && mvpMeta.timer) || 1000;
 
         var respawn = moment.utc(when).add(timeToRespawn, 'minutes').toDate();
 

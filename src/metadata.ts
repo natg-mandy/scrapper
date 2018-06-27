@@ -51,6 +51,9 @@ export const metadata = {
     'Maya': {
       timer: 120
     },
+    'Samurai Specter': {
+      timer: 91
+    },
     'Tao Gunka': {
       timer: 300
     },
