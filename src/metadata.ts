@@ -7,7 +7,8 @@ export const metadata = {
     'beach_dun': {},
     'gef_fild14': {},
     'kh_dun02': {},
-    'lhz_dun03': {},
+    //timers are weird with these..
+    // 'lhz_dun03': {},
     'lou_dun03': {},
     'moc_fild22': {},
     'moc_pryd06': {},

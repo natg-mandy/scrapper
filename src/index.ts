@@ -1,5 +1,6 @@
 import * as http from 'http';
 import * as Xray from 'x-ray';
+import 'rxjs';
 import {metadata} from './metadata';
 import * as Webhook from 'webhook-discord';
 import * as moment from 'moment';
@@ -65,6 +66,10 @@ function getMvpData(): Promise<IMvpData[]> {
         var x = Xray();
 
         x('https://obsidianro.com/panel/?module=ranking&action=mvp', 'table.horizontal-table')((err, table) => {
+            if (err) {
+                console.error(err);
+                throw err;
+            }
             var data: IMvpData[] = parse(table);
 
             return resolve(data);
