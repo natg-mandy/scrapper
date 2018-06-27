@@ -7,6 +7,7 @@ export const metadata = {
     'beach_dun': {},
     'gef_fild14': {},
     'kh_dun02': {},
+    'lhz_dun03': {},
     'lou_dun03': {},
     'moc_fild22': {},
     'moc_pryd06': {},
@@ -18,6 +19,10 @@ export const metadata = {
     'tur_dun04': {}
   },
   mvp: {
+    'Amon Ra': {
+      window: 10,
+      timer: 60
+    },
     'Bacsojin': {
       timer: 117
     },

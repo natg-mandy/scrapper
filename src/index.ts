@@ -25,7 +25,11 @@ export interface IMvpData {
     timer: Observable<[number, number]>;
     key: string;
 }
-const webhookUrl = `https://discordapp.com/api/webhooks/460939241292300299/3SeBHlQ-VjnjYgKlc86YVs9V9aiU4Tekjjz7LETXewDghRxk2wLru5wP3H92r7jegqCq`;
+
+const env = process.env.NODE_ENV || 'dev';
+
+const webhookSuffix = process.env.WEBHOOK_URL || '460939241292300299/3SeBHlQ-VjnjYgKlc86YVs9V9aiU4Tekjjz7LETXewDghRxk2wLru5wP3H92r7jegqCq';
+const webhookUrl = `https://discordapp.com/api/webhooks/${webhookSuffix}`;
 
 const webhook = new Webhook(webhookUrl);
 
@@ -105,7 +109,9 @@ function beginWatch(key: string, data: IMvpData): void {
             if (ms <= 5 * 60 * 1000) {
                 const msg = Utils.constructMessage(data.mvp, mins, data.mapName, data.who);
                 console.log(msg);
-                Utils.broadcast(webhook, msg);
+                if (env === 'production') {
+                    Utils.broadcast(webhook, msg);
+                }
                 finishBroadcast$.next(key);
             }
         });
@@ -126,7 +132,7 @@ function parse(table: string) {
         var mvp = MVP;
         var mapName = mapName;
 
-        if (!(whitelistedMaps.some(m => m === mapName) && whitelistedMvps.some(m => m === mvp))) {
+        if (!whitelistedMaps.some(m => m === mapName)) {
             return null;
         }
 
