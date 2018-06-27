@@ -1,6 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 var webpack = require("webpack");
+var nodeExternals = require('webpack-node-externals');
 
 
 //snagged from http://jlongster.com/Backend-Apps-with-Webpack--Part-I
@@ -29,7 +30,7 @@ module.exports = {
     ],
     mainFiles: ['index']
   },
-  externals: [],
+  externals: [nodeExternals()],
   module: {
     rules: [
       {

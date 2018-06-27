@@ -11,6 +11,8 @@
   "license": "ISC",
   "dependencies": {
     "@types/lodash": "^4.14.110",
+    "@types/mongodb": "^3.0.21",
+    "@types/mongoose": "^5.0.18",
     "@types/node": "^8.0.27",
     "babel-loader": "^7.1.2",
     "emitter": "^0.0.5",
@@ -19,11 +21,16 @@
     "lodash": "^4.17.10",
     "moment": "^2.22.2",
     "moment-timezone": "^0.5.21",
+    "mongodb": "^3.1.0",
+    "mongoose": "^5.1.7",
+    "reflect-metadata": "^0.1.12",
     "rxjs": "5.5.10",
     "ts-loader": "^2.2.2",
+    "typegoose": "^5.2.1",
     "typescript": "^2.5.2",
     "webhook-discord": "^2.3.0",
     "webpack": "^3.5.6",
+    "webpack-node-externals": "^1.7.2",
     "x-ray": "^2.3.3"
   },
   "devDependencies": {
