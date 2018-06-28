@@ -52,6 +52,8 @@ const s = new http.Server(async (req, res) => {
         latest.push(d.toJSON());
     });
 
+    latest = orderBy(latest, l => l.Respawn_DT);
+
     res.end(JSON.stringify(latest));
 });
 

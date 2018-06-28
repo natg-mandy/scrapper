@@ -89,7 +89,8 @@ export class MvpRecord extends Typegoose {
             Minutes_Until_Respawn: this.timeUntilSpawn().toFixed(2),
             Killed_By: this.Killed_By,
             Killed_At: moment(this.Killed_At).tz('America/New_York').format('LT z'),
-            Respawn_At: moment(this.getMinRespawnTime()).tz('America/New_York').format('LT z')
+            Respawn_At: moment(this.getMinRespawnTime()).tz('America/New_York').format('LT z'),
+            Respawn_DT: this.getMinRespawnTime()
           };
     }
 }
