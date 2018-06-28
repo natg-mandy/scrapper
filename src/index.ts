@@ -23,7 +23,7 @@ export interface IMvpData {
     mvp: string;
     mapName: string;
     respawn: Date;
-    timer$: Observable<[number, number]>;
+    timer$: Observable<[number, number, number]>;
     key: string;
 }
 
@@ -93,12 +93,9 @@ export function update(data: IMvpData) {
     //if our new spawn time is before our old, update
     if (!cached || cached < data.respawn.getTime()) {
         mvpMap.set(data.key, data);
-        var msg = `${data.mvp} was killed by ${data.who} at ${data.when.toUTCString()} and will respawn in ${moment(data.respawn).fromNow()}`;
+        var msg = `${data.mvp} was killed by ${data.who} and will respawn ${moment(data.respawn).fromNow()}`;
 
-        console.log(msg);
-        if (env === 'production') {
-            Utils.broadcast(webhook, msg);
-        }
+        Utils.broadcast(webhook, 'MVP Killed', msg);
 
         beginWatch(data.key, data);
     }
@@ -118,19 +115,20 @@ export function beginWatch(key: string, data: IMvpData): void {
         .takeUntil(finishBroadcast$.filter(k => k === key))
         .switchMap(z => {
             return Promise.resolve(new Date().getTime());
-        }, ([spawn], current) => {
-            return (spawn - current);
+        }, ([minSpawn, maxSpawn], current) => {
+            return [(minSpawn - current), maxSpawn - current];
         })
-        .subscribe((ms) => {
-            var secs = secs = ms / 1000;
-            var mins = secs / 60;
+        .subscribe(([minSpawn, maxSpawn]) => {
+            var minSpawnInMin = minSpawn / 60 / 1000;
+            var maxSpawnInMin = maxSpawn / 60 / 1000;
 
-            if (ms <= 5 * 60 * 1000) {
-                const msg = Utils.constructMessage(data.mvp, mins, data.mapName, data.who);
-                console.log(msg);
-                if (env === 'production') {
-                    Utils.broadcast(webhook, msg);
-                }
+            var spawnWindow: number = metadata.mvp[data.mvp].window;
+
+            if (minSpawn <= Utils.notificationThreshold) {
+                const msg = Utils.constructMessage(data.mvp, minSpawnInMin, maxSpawnInMin, data.mapName, data.who);
+
+                Utils.broadcast(webhook, 'MVP Spawning Soon', msg);
+
                 finishBroadcast$.next(key);
             }
         });
@@ -164,15 +162,15 @@ function parse(table: string) {
         }
 
         var respawn = moment.utc(when).add(timeToRespawn, 'minutes').toDate();
-
+        var spawnWindow = metadata.mvp[mvp].window
         var data = <IMvpData> {
             mvp,
             when,
             who,
             respawn,
             mapName,
-            key: `${mapName}${mvp}`,
-            timer$: Utils.getTimer(respawn)
+            key: Utils.getKey(mapName, mvp),
+            timer$: Utils.getTimer(respawn, spawnWindow)
         };
 
         return data;
