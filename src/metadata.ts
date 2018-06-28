@@ -1,4 +1,3 @@
-
 export const metadata = {
   map: {
     'abbey02': {},
@@ -6,12 +5,14 @@ export const metadata = {
     'anthell02': {},
     'beach_dun': {},
     'gef_fild14': {},
+    'jupe_core': {},
     'kh_dun02': {},
     'lhz_dun03': {
       timer: 100,
       window: 30
     },
     'lou_dun03': {},
+    'mjolnir_04': {},
     'moc_fild22': {},
     'moc_pryd06': {},
     'odin_tem03': {},
@@ -53,6 +54,10 @@ export const metadata = {
     'Maya': {
       timer: 120
     },
+    'Mistress': {
+      timer: 120,
+      window: 10
+    },
     'Samurai Specter': {
       timer: 91
     },
@@ -64,6 +69,10 @@ export const metadata = {
     },
     'Valkyrie Randgris': {
       timer: 480
+    },
+    'Vesper': {
+      timer: 120,
+      window: 10
     },
     'Wounded Morroc': {
       timer: 720
