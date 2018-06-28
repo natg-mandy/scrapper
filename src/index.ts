@@ -126,10 +126,13 @@ function parse(table: string) {
     var items = table.split('\n')
         .map(z => z.trim())
         .filter(z => !!z);
-        //no 5
+
+    //first 5 are the table headers
     items.splice(0, 5);
 
     var chunks: [string, string, string, string, string][] = chunk(items, 5);
+
+    //@TODO Need to remove repeats here.
 
     var data = chunks.map(([murderTime, whoKilled, MVP, exp/*useless*/, mapName]) => {
         var when = moment.utc(murderTime).toDate();
