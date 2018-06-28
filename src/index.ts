@@ -23,7 +23,7 @@ export interface IMvpData {
     mvp: string;
     mapName: string;
     respawn: Date;
-    timer: Observable<[number, number]>;
+    timer$: Observable<[number, number]>;
     key: string;
 }
 
@@ -40,13 +40,15 @@ const whitelistedMvps = Object.keys(metadata.mvp);
 
 const PORT = process.env.PORT || 3000;
 
-const mvpMap = new Map<string, IMvpData>();
+export const mvpMap = new Map<string, IMvpData>();
 
 /** tells anything listening on this key to stop */
 const finishBroadcast$ = new Subject<string>();
 
 const s = new http.Server(async (req, res) => {
     var latest = [];
+
+    await getAndUpdate();
 
     mvpMap.forEach(d => {
         latest.push(Utils.getReadable(d));
@@ -81,26 +83,38 @@ async function getAndUpdate() {
     var data = await getMvpData();
     console.log('latest data', data);
 
-    data.forEach(async (next) => {
-        let existing = mvpMap.get(next.key);
-        let cached = existing && existing.respawn.getTime();
-        if (cached !== next.respawn.getTime()) {
-            mvpMap.set(next.key, next);
-            beginWatch(next.key, next);
-        }
-    });
+    data.forEach((next) => update(next));
 }
 
-Observable.timer(0, 5 * 60 * 1000)
+export function update(data: IMvpData) {
+    let existing = mvpMap.get(data.key);
+    let cached = existing && existing.respawn.getTime();
+
+    //if our new spawn time is before our old, update
+    if (!cached || cached < data.respawn.getTime()) {
+        mvpMap.set(data.key, data);
+        var msg = `${data.mvp} was killed by ${data.who} at ${data.when.toUTCString()} and will respawn in ${moment(data.respawn).fromNow()}`;
+
+        console.log(msg);
+        if (env === 'production') {
+            Utils.broadcast(webhook, msg);
+        }
+
+        beginWatch(data.key, data);
+    }
+}
+
+
+Observable.timer(0, 30 * 1000)
     .subscribe(() => {
         console.log('getting and updating data');
         getAndUpdate();
     })
 
-function beginWatch(key: string, data: IMvpData): void {
+export function beginWatch(key: string, data: IMvpData): void {
     finishBroadcast$.next(key);
 
-    data.timer
+    data.timer$
         .takeUntil(finishBroadcast$.filter(k => k === key))
         .switchMap(z => {
             return Promise.resolve(new Date().getTime());
@@ -132,8 +146,6 @@ function parse(table: string) {
 
     var chunks: [string, string, string, string, string][] = chunk(items, 5);
 
-    //@TODO Need to remove repeats here.
-
     var data = chunks.map(([murderTime, whoKilled, MVP, exp/*useless*/, mapName]) => {
         var when = moment.utc(murderTime).toDate();
         var who = whoKilled;
@@ -145,7 +157,11 @@ function parse(table: string) {
         }
 
         var mvpMeta = metadata.mvp[mvp];
-        var timeToRespawn = (mvpMeta && mvpMeta.timer) || 1000;
+        var timeToRespawn = (mvpMeta && mvpMeta.timer);
+
+        if (!timeToRespawn) {
+            return;
+        }
 
         var respawn = moment.utc(when).add(timeToRespawn, 'minutes').toDate();
 
@@ -156,7 +172,7 @@ function parse(table: string) {
             respawn,
             mapName,
             key: `${mapName}${mvp}`,
-            timer: Utils.getTimer(respawn)
+            timer$: Utils.getTimer(respawn)
         };
 
         return data;
