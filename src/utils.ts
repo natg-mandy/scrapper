@@ -42,17 +42,6 @@ export class Utils {
     }
   }
 
-  public static getDumpedJson(data: IMvpData): IMessyMvpData {
-    return {
-      DATE__DEATH: data.when,
-      DATE__RESPAWN: data.respawn,
-      MAP_NAME: data.mapName,
-      MINUTES_UNTIL_RESPAWN: this.msToMinute(data.respawn.getTime() - new Date().getTime()),
-      MVP_NAME: data.mvp,
-      WHO_KILLED_LAST: data.who
-    };
-  }
-
   public static getCleanJson(data: IMvpData): ICleanMvpData {
     return {
       Mvp_Name: data.mvp,
