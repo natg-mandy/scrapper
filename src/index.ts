@@ -1,13 +1,15 @@
 import * as http from 'http';
 import * as Xray from 'x-ray';
+import 'rxjs';
 import {metadata} from './metadata';
 import * as Webhook from 'webhook-discord';
 import * as moment from 'moment';
+import 'moment-timezone';
 import { Utils } from 'utils';
 import { orderBy } from 'lodash';
 import { Observable, Subject } from 'rxjs';
 
-export interface IReadableMvpData {
+export interface IMessyMvpData {
     WHO_KILLED_LAST: string;
     MAP_NAME: string;
     DATE__RESPAWN: Date;
@@ -16,13 +18,22 @@ export interface IReadableMvpData {
     MVP_NAME: string;
 }
 
+export interface ICleanMvpData {
+    Killed_At: string,
+    Respawn_At: string;
+    Map_Name: string;
+    Mvp_Name: string;
+    Killed_By: string;
+    Minutes_Until_Respawn: string;
+  };
+
 export interface IMvpData {
     when: Date;
     who: string;
     mvp: string;
     mapName: string;
     respawn: Date;
-    timer: Observable<[number, number]>;
+    timer$: Observable<[number, number, number]>;
     key: string;
 }
 
@@ -39,7 +50,7 @@ const whitelistedMvps = Object.keys(metadata.mvp);
 
 const PORT = process.env.PORT || 3000;
 
-const mvpMap = new Map<string, IMvpData>();
+export const mvpMap = new Map<string, IMvpData>();
 
 /** tells anything listening on this key to stop */
 const finishBroadcast$ = new Subject<string>();
@@ -48,7 +59,7 @@ const s = new http.Server(async (req, res) => {
     var latest = [];
 
     mvpMap.forEach(d => {
-        latest.push(Utils.getReadable(d));
+        latest.push(Utils.getCleanJson(d));
     });
 
     res.end(JSON.stringify(latest));
@@ -65,6 +76,10 @@ function getMvpData(): Promise<IMvpData[]> {
         var x = Xray();
 
         x('https://obsidianro.com/panel/?module=ranking&action=mvp', 'table.horizontal-table')((err, table) => {
+            if (err) {
+                console.error(err);
+                throw err;
+            }
             var data: IMvpData[] = parse(table);
 
             return resolve(data);
@@ -76,42 +91,52 @@ async function getAndUpdate() {
     var data = await getMvpData();
     console.log('latest data', data);
 
-    data.forEach(async (next) => {
-        let existing = mvpMap.get(next.key);
-        let cached = existing && existing.respawn.getTime();
-        if (cached !== next.respawn.getTime()) {
-            mvpMap.set(next.key, next);
-            beginWatch(next.key, next);
-        }
-    });
+    data.forEach((next) => update(next));
 }
 
-Observable.timer(0, 5 * 60 * 1000)
+export function update(data: IMvpData) {
+    let existing = mvpMap.get(data.key);
+    let cached = existing && existing.respawn.getTime();
+
+    //if our new spawn time is before our old, update
+    if (!cached || cached < data.respawn.getTime()) {
+        mvpMap.set(data.key, data);
+        var msg = `${data.mvp} was killed by ${data.who} and will respawn ${moment(data.respawn).fromNow()}`;
+
+        Utils.broadcast(webhook, 'MVP Killed', msg);
+
+        beginWatch(data.key, data);
+    }
+}
+
+
+Observable.timer(0, 30 * 1000)
     .subscribe(() => {
         console.log('getting and updating data');
         getAndUpdate();
     })
 
-function beginWatch(key: string, data: IMvpData): void {
+export function beginWatch(key: string, data: IMvpData): void {
     finishBroadcast$.next(key);
 
-    data.timer
+    data.timer$
         .takeUntil(finishBroadcast$.filter(k => k === key))
         .switchMap(z => {
             return Promise.resolve(new Date().getTime());
-        }, ([spawn], current) => {
-            return (spawn - current);
+        }, ([minSpawn, maxSpawn], current) => {
+            return [(minSpawn - current), maxSpawn - current];
         })
-        .subscribe((ms) => {
-            var secs = secs = ms / 1000;
-            var mins = secs / 60;
+        .subscribe(([minSpawn, maxSpawn]) => {
+            var minSpawnInMin = minSpawn / 60 / 1000;
+            var maxSpawnInMin = maxSpawn / 60 / 1000;
 
-            if (ms <= 5 * 60 * 1000) {
-                const msg = Utils.constructMessage(data.mvp, mins, data.mapName, data.who);
-                console.log(msg);
-                if (env === 'production') {
-                    Utils.broadcast(webhook, msg);
-                }
+            var spawnWindow: number = metadata.mvp[data.mvp].window;
+
+            if (minSpawn <= Utils.notificationThreshold) {
+                const msg = Utils.constructMessage(data.mvp, minSpawnInMin, maxSpawnInMin, data.mapName, data.who);
+
+                Utils.broadcast(webhook, 'MVP Spawning Soon', msg);
+
                 finishBroadcast$.next(key);
             }
         });
@@ -121,12 +146,13 @@ function parse(table: string) {
     var items = table.split('\n')
         .map(z => z.trim())
         .filter(z => !!z);
-        //no 5
+
+    //first 5 are the table headers
     items.splice(0, 5);
 
-    var chanks: [string, string, string, string, string][] = chunk(items, 5);
+    var chunks: [string, string, string, string, string][] = chunk(items, 5);
 
-    var data = chanks.map(([murderTime, whoKilled, MVP, OL, mapName]) => {
+    var data = chunks.map(([murderTime, whoKilled, MVP, exp/*useless*/, mapName]) => {
         var when = moment.utc(murderTime).toDate();
         var who = whoKilled;
         var mvp = MVP;
@@ -136,18 +162,23 @@ function parse(table: string) {
             return null;
         }
 
-        var timeToRespawn = metadata.mvp[mvp].timer;
+        var mvpMeta = metadata.mvp[mvp];
+        var timeToRespawn = (mvpMeta && mvpMeta.timer);
+
+        if (!timeToRespawn) {
+            return;
+        }
 
         var respawn = moment.utc(when).add(timeToRespawn, 'minutes').toDate();
-
+        var spawnWindow = metadata.mvp[mvp].window
         var data = <IMvpData> {
             mvp,
             when,
             who,
             respawn,
             mapName,
-            key: `${mapName}${mvp}`,
-            timer: Utils.getTimer(respawn)
+            key: Utils.getKey(mapName, mvp),
+            timer$: Utils.getTimer(respawn, spawnWindow)
         };
 
         return data;

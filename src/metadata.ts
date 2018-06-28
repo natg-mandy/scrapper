@@ -1,14 +1,27 @@
 
-export const metadata = {
+interface IMetadata {
+  map: {[index: string]: {}};
+  mvp: {[index: string]: {
+    alias?: string[];
+    window?: number;
+    timer: number;
+  }}
+}
+export const metadata: IMetadata = {
   map: {
     'abbey02': {},
     'ama_dun03': {},
     'anthell02': {},
     'beach_dun': {},
     'gef_fild14': {},
+    'jupe_core': {},
     'kh_dun02': {},
-    'lhz_dun03': {},
+    'lhz_dun03': {
+      timer: 100,
+      window: 30
+    },
     'lou_dun03': {},
+    'mjolnir_04': {},
     'moc_fild22': {},
     'moc_pryd06': {},
     'odin_tem03': {},
@@ -23,44 +36,63 @@ export const metadata = {
       window: 10,
       timer: 60
     },
-    'Bacsojin': {
-      timer: 117
-    },
-    'White Lady': {
-      timer: 117
-    },
     'Fallen Bishop Hibram': {
-      timer: 120
+      timer: 120,
+      window: 10
     },
     'Gloom Under Night': {
-      timer: 300
+      timer: 300,
+      window: 10
     },
     'Golden Thief Bug': {
-      timer: 60
+      timer: 60,
+      window: 10
     },
     'Ifrit': {
-      timer: 660
-    },
-    'Incantation Samurai': {
-      timer: 91
+      timer: 660,
+      window: 10
     },
     'Kiel D-01': {
-      timer: 120
+      timer: 120,
+      window: 60
     },
     'Maya': {
-      timer: 120
+      timer: 120,
+      window: 10
+    },
+    'Mistress': {
+      timer: 120,
+      window: 10
+    },
+    'Samurai Specter': {
+      alias: ['Incantation Samurai'],
+      timer: 91,
+      window: 10
     },
     'Tao Gunka': {
-      timer: 300
+      timer: 300,
+      window: 10
     },
     'Turtle General': {
-      timer: 60
+      timer: 60,
+      window: 10
     },
     'Valkyrie Randgris': {
-      timer: 480
+      timer: 480,
+      window: 10
+    },
+    'Vesper': {
+      timer: 120,
+      window: 10
     },
     'Wounded Morroc': {
-      timer: 720
-    }
+      timer: 720,
+      window: 60
+    },
+    'White Lady': {
+      alias: ['Bacsojin'],
+      timer: 117,
+      window: 10
+    },
   }
 }
