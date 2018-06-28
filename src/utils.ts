@@ -1,11 +1,11 @@
 import * as rx from 'rxjs';
 import * as mmm from 'moment';
-import { IMvpData, IReadableMvpData } from 'index';
+import { IMvpData, IMessyMvpData, ICleanMvpData } from 'index';
 import { Observable } from 'rxjs';
 var moment = mmm;
 export class Utils {
 
-  public static notificationThreshold = 20 * 60 * 1000;
+  public static notificationThreshold = 5 * 60 * 1000;
 
   public static secondsLeft(expectedSpawn: Date) {
     const es = moment(expectedSpawn);
@@ -21,7 +21,7 @@ export class Utils {
     return `${mvp} will spawn at ${mapName} between  ${minLeft} - ${spawnWindow} minutes from now. It was last killed by ${lastKilla}.`;
   }
 
-  /** Returns the time left (in ms) until mvp spawn. This will broadcast the time every 5 minutes */
+  /** Returns the time left (in ms) until mvp spawn. Broadcast the time every second. */
   public static getTimer(spawnTime: Date, spawnWindow: number): rx.Observable<[number, number, number]> {
     var spawnWindowInMs = spawnWindow ? spawnWindow * 60 * 1000 : null;
     var spawnObs = rx.Observable.from([spawnTime])
@@ -42,7 +42,7 @@ export class Utils {
     }
   }
 
-  public static getReadable(data: IMvpData): IReadableMvpData {
+  public static getDumpedJson(data: IMvpData): IMessyMvpData {
     return {
       DATE__DEATH: data.when,
       DATE__RESPAWN: data.respawn,
@@ -50,6 +50,17 @@ export class Utils {
       MINUTES_UNTIL_RESPAWN: this.msToMinute(data.respawn.getTime() - new Date().getTime()),
       MVP_NAME: data.mvp,
       WHO_KILLED_LAST: data.who
+    };
+  }
+
+  public static getCleanJson(data: IMvpData): ICleanMvpData {
+    return {
+      Mvp_Name: data.mvp,
+      Map_Name: data.mapName,
+      Minutes_Until_Respawn: this.msToMinute(data.respawn.getTime() - new Date().getTime()),
+      Killed_By: data.who,
+      Killed_At: moment(data.when).tz('America/New_York').format('LT z'),
+      Respawn_At: moment(data.respawn).tz('America/New_York').format('LT z')
     };
   }
 

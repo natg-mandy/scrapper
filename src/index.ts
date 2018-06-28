@@ -4,11 +4,12 @@ import 'rxjs';
 import {metadata} from './metadata';
 import * as Webhook from 'webhook-discord';
 import * as moment from 'moment';
+import 'moment-timezone';
 import { Utils } from 'utils';
 import { orderBy } from 'lodash';
 import { Observable, Subject } from 'rxjs';
 
-export interface IReadableMvpData {
+export interface IMessyMvpData {
     WHO_KILLED_LAST: string;
     MAP_NAME: string;
     DATE__RESPAWN: Date;
@@ -16,6 +17,15 @@ export interface IReadableMvpData {
     MINUTES_UNTIL_RESPAWN: string;
     MVP_NAME: string;
 }
+
+export interface ICleanMvpData {
+    Killed_At: string,
+    Respawn_At: string;
+    Map_Name: string;
+    Mvp_Name: string;
+    Killed_By: string;
+    Minutes_Until_Respawn: string;
+  };
 
 export interface IMvpData {
     when: Date;
@@ -48,10 +58,8 @@ const finishBroadcast$ = new Subject<string>();
 const s = new http.Server(async (req, res) => {
     var latest = [];
 
-    await getAndUpdate();
-
     mvpMap.forEach(d => {
-        latest.push(Utils.getReadable(d));
+        latest.push(Utils.getCleanJson(d));
     });
 
     res.end(JSON.stringify(latest));
