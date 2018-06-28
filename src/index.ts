@@ -129,9 +129,9 @@ function parse(table: string) {
         //no 5
     items.splice(0, 5);
 
-    var chanks: [string, string, string, string, string][] = chunk(items, 5);
+    var chunks: [string, string, string, string, string][] = chunk(items, 5);
 
-    var data = chanks.map(([murderTime, whoKilled, MVP, OL, mapName]) => {
+    var data = chunks.map(([murderTime, whoKilled, MVP, exp/*useless*/, mapName]) => {
         var when = moment.utc(murderTime).toDate();
         var who = whoKilled;
         var mvp = MVP;
