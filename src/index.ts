@@ -142,7 +142,7 @@ export function beginWatch(key: string, data: InstanceType<MvpRecord>): void {
             var minSpawnInMin = minSpawn / 60 / 1000;
             var maxSpawnInMin = maxSpawn / 60 / 1000;
 
-            if (minSpawn <= Utils.notificationThreshold) {
+            if (minSpawn <= Utils.notificationThreshold && maxSpawn > -10) {
                 const msg = Utils.constructMessage(data.Mvp_Name, minSpawnInMin, maxSpawnInMin, data.Map_Name, data.Killed_By);
 
                 Utils.broadcast(webhook, 'MVP Spawning Soon', msg);
