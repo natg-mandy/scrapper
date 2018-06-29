@@ -45,7 +45,7 @@ export class MvpRecord extends Typegoose {
     @instanceMethod
     getKey() {
         var meta = this.getMeta();
-        var mvpname = (meta.mvp.timer && this.Mvp_Name) || '';
+        var mvpname = (meta.mvp && meta.mvp.timer && this.Mvp_Name) || '';
 
         return MvpRecord.getKey(this.Map_Name, mvpname);
     }
