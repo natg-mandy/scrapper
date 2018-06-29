@@ -26,8 +26,8 @@ export class Utils {
     await dbconnect;
 
     return MvpRecordModel.find()
-      .sort({Killed_At: 1})
-      .limit(40)
+      .sort({Killed_At: -1})
+      .limit(150)
       .exec();
   }
 }
