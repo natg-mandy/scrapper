@@ -142,6 +142,8 @@ export function beginWatch(key: string, data: InstanceType<MvpRecord>): void {
             var minSpawnInMin = minSpawn / 60 / 1000;
             var maxSpawnInMin = maxSpawn / 60 / 1000;
 
+            /** Don't broadcast if the mvp spawned over 10 minutes ago
+             * just doing this to fix redeploying mostly. */
             if (minSpawn <= Utils.notificationThreshold && maxSpawn > -10) {
                 const msg = Utils.constructMessage(data.Mvp_Name, minSpawnInMin, maxSpawnInMin, data.Map_Name, data.Killed_By);
 
