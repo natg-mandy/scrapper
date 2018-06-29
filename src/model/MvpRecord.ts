@@ -112,6 +112,13 @@ export class MvpRecord extends Typegoose {
             Respawn_DT: this.getMinRespawnTime()
           };
     }
+
+    @instanceMethod
+    /** return whether or not it's possible for the mvp to currently spawn */
+    isWithinWindow() {
+        var now = new Date().getTime();
+        return this.getMinRespawnTime() < now && now < this.getMaxRespawnTime();
+    }
 }
 
 export const MvpRecordModel = new MvpRecord().getModelForClass(MvpRecord);
