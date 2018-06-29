@@ -76,7 +76,7 @@ export class MvpRecord extends Typegoose {
     @instanceMethod
     private getWindow() {
         var m = this.getMeta();
-        return m.map.timer || m.mvp.timer;
+        return m.map.window || m.mvp.window;
     }
 
     @instanceMethod
