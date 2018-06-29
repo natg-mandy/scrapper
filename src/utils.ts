@@ -14,11 +14,12 @@ export class Utils {
   }
 
   public static broadcast(webhook, title: string, msg: string) {
-    // if (process.env.NODE_ENV === 'production') {
-      webhook.custom("mvp-bot", msg, 'MVP Spawning Soon', "#0aaf94");
-    // } else {
-      console.log(`${title} - ${msg}`);
-    // }
+    console.log(`${title} - ${msg}`);
+
+    if (process.env.NODE_ENV === 'production') {
+      console.log('broadcasting msg to discord...');
+      webhook.custom("mvp-bot", msg, title, "#0aaf94");
+    }
   }
 
   public static async loadMvpRecords()  {
