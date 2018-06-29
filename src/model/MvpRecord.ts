@@ -3,10 +3,15 @@ import * as mongoose from 'mongoose';
 import { metadata } from 'metadata';
 import * as rx from 'rxjs';
 import * as moment from 'moment';
-import { IMvpData } from 'index';
+import { IMvpData, mvpMap } from 'index';
+interface ITimer {
+    timer?: number;
+    window?: number;
+}
+const db = /*process.env.DATABASE_URL ||*/ 'mongodb://admin:admin69@ds219181.mlab.com:19181/mvp_mandy';
+console.log(`attempting to connect to '${db}'`);
 
-const db = process.env.DATABASE_URL || 'mongodb://admin:admin69@ds219181.mlab.com:19181/mvp_mandy';
-mongoose.connect(db);
+export const dbconnect = mongoose.connect(db);
 
 export class MvpRecord extends Typegoose {
     @prop()
@@ -23,6 +28,7 @@ export class MvpRecord extends Typegoose {
 
     @staticMethod
     public static getKey(mapName: string, mvpName: string) {
+
         return `${mapName}${mvpName}`;
     }
 
@@ -38,7 +44,10 @@ export class MvpRecord extends Typegoose {
 
     @instanceMethod
     getKey() {
-        return MvpRecord.getKey(this.Map_Name, this.Mvp_Name);
+        var meta = this.getMeta();
+        var mvpname = (meta.mvp.timer && this.Mvp_Name) || '';
+
+        return MvpRecord.getKey(this.Map_Name, mvpname);
     }
 
 
@@ -54,18 +63,28 @@ export class MvpRecord extends Typegoose {
     getMinRespawnTime(): number {
         var meta = this.getMeta();
         var ka = this.Killed_At.getTime();
-        return ka + (meta.timer * 60 * 1000);
+        var tts = meta.map.timer || meta.mvp.timer;
+        return ka + (tts * 60 * 1000);
     }
 
     @instanceMethod
     /** Get timestamp for respawn */
     getMaxRespawnTime(): number {
-        return this.getMinRespawnTime() + (this.getMeta().window * 60 * 1000);
+        return this.getMinRespawnTime() + (this.getWindow() * 60 * 1000);
     }
 
     @instanceMethod
-    private getMeta() {
-        return metadata.mvp[this.Mvp_Name];
+    private getWindow() {
+        var m = this.getMeta();
+        return m.map.timer || m.mvp.timer;
+    }
+
+    @instanceMethod
+    private getMeta(): {map: ITimer; mvp: ITimer} {
+        return {
+            map: metadata.map[this.Map_Name],
+            mvp: metadata.mvp[this.Mvp_Name]
+        };
     }
 
     @instanceMethod

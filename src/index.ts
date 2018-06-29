@@ -29,14 +29,12 @@ export interface IMvpData {
 
 const env = process.env.NODE_ENV || 'dev';
 
-const webhookSuffix = process.env.WEBHOOK_URL || '460939241292300299/3SeBHlQ-VjnjYgKlc86YVs9V9aiU4Tekjjz7LETXewDghRxk2wLru5wP3H92r7jegqCq';
+const webhookSuffix = /* process.env.WEBHOOK_URL ||*/ '460939241292300299/3SeBHlQ-VjnjYgKlc86YVs9V9aiU4Tekjjz7LETXewDghRxk2wLru5wP3H92r7jegqCq';
 const webhookUrl = `https://discordapp.com/api/webhooks/${webhookSuffix}`;
 
 const webhook = new Webhook(webhookUrl);
 
 const whitelistedMaps = Object.keys(metadata.map);
-
-const whitelistedMvps = Object.keys(metadata.mvp);
 
 const PORT = process.env.PORT || 3000;
 
@@ -92,9 +90,15 @@ async function getAndUpdate() {
 
     var data = await getMvpData();
 
-    console.log('latest data', data.map(z => z.toJSON()));
-
     data.forEach((next) => update(next));
+
+    var latest = [];
+
+    mvpMap.forEach(m => {
+        latest.push(m.toJSON());
+    })
+
+    console.log('latest data', latest);
 }
 
 export function update(data: InstanceType<MvpRecord>) {
@@ -105,14 +109,14 @@ export function update(data: InstanceType<MvpRecord>) {
     //if our new spawn time is before our old, update
     if (!cached || cached < data.getMinRespawnTime()) {
         mvpMap.set(key, data);
-        var msg = `${data.Mvp_Name} was killed by ${data.Killed_By} and will respawn ${moment(data.getMinRespawnTime()).fromNow()}`;
 
         if (data.isNew) {
+            var msg = `${data.Mvp_Name} was killed by ${data.Killed_By} and will respawn ${moment(data.getMinRespawnTime()).fromNow()}`;
             console.debug('saving new record new');
+            Utils.broadcast(webhook, 'MVP Killed', msg);
             data.save();
         }
 
-        Utils.broadcast(webhook, 'MVP Killed', msg);
 
         beginWatch(key, data);
     }
@@ -164,13 +168,6 @@ function parse(table: string) {
 
         if (!whitelistedMaps.some(m => m === mapName)) {
             return null;
-        }
-
-        var mvpMeta = metadata.mvp[mvpName];
-        var timeToRespawn = (mvpMeta && mvpMeta.timer);
-
-        if (!timeToRespawn) {
-            return;
         }
 
         var data = <IMvpData> {
