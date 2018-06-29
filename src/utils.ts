@@ -1,17 +1,9 @@
-import * as rx from 'rxjs';
 import * as mmm from 'moment';
-import { IMvpData, IMessyMvpData, ICleanMvpData } from 'index';
-import { Observable } from 'rxjs';
-var moment = mmm;
+import { MvpRecordModel, dbconnect } from 'model/MvpRecord';
+
 export class Utils {
 
   public static notificationThreshold = 5 * 60 * 1000;
-
-  public static secondsLeft(expectedSpawn: Date) {
-    const es = moment(expectedSpawn);
-
-    return es.diff(moment(), 'seconds');
-  }
 
   public static constructMessage(mvp: string, minLeft: number, spawnWindow: number, mapName: string, lastKilla: string) {
     minLeft = Math.floor(minLeft);
@@ -21,43 +13,21 @@ export class Utils {
     return `${mvp} will spawn at ${mapName} between  ${minLeft} - ${spawnWindow} minutes from now. It was last killed by ${lastKilla}.`;
   }
 
-  /** Returns the time left (in ms) until mvp spawn. Broadcast the time every second. */
-  public static getTimer(spawnTime: Date, spawnWindow: number): rx.Observable<[number, number, number]> {
-    var spawnWindowInMs = spawnWindow ? spawnWindow * 60 * 1000 : null;
-    var spawnObs = rx.Observable.from([spawnTime])
-      .map(d => d.getTime());
-
-    return Observable.combineLatest(
-      spawnObs,
-      spawnObs.map(z => z + spawnWindowInMs),
-      rx.Observable.timer(0, 1000)
-    );
-  }
-
   public static broadcast(webhook, title: string, msg: string) {
+    console.log(`${title} - ${msg}`);
+
     if (process.env.NODE_ENV === 'production') {
-      webhook.custom("mvp-bot", msg, 'MVP Spawning Soon', "#0aaf94");
-    } else {
-      console.log(`${title} - ${msg}`);
+      console.log('broadcasting msg to discord...');
+      webhook.custom("mvp-bot", msg, title, "#0aaf94");
     }
   }
 
-  public static getCleanJson(data: IMvpData): ICleanMvpData {
-    return {
-      Mvp_Name: data.mvp,
-      Map_Name: data.mapName,
-      Minutes_Until_Respawn: this.msToMinute(data.respawn.getTime() - new Date().getTime()),
-      Killed_By: data.who,
-      Killed_At: moment(data.when).tz('America/New_York').format('LT z'),
-      Respawn_At: moment(data.respawn).tz('America/New_York').format('LT z')
-    };
-  }
+  public static async loadMvpRecords()  {
+    await dbconnect;
 
-  public static msToMinute(val: number): string {
-    return (val / 60 / 1000).toFixed(2);
-  }
-
-  public static getKey(mapName: string, mvpName: string): string {
-    return `${mapName}${mvpName}`
+    return MvpRecordModel.find()
+      .sort({Killed_At: 1})
+      .limit(40)
+      .exec();
   }
 }

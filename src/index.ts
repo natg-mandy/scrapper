@@ -8,15 +8,8 @@ import 'moment-timezone';
 import { Utils } from 'utils';
 import { orderBy } from 'lodash';
 import { Observable, Subject } from 'rxjs';
-
-export interface IMessyMvpData {
-    WHO_KILLED_LAST: string;
-    MAP_NAME: string;
-    DATE__RESPAWN: Date;
-    DATE__DEATH: Date;
-    MINUTES_UNTIL_RESPAWN: string;
-    MVP_NAME: string;
-}
+import { MvpRecordModel, MvpRecord } from 'model/MvpRecord';
+import { InstanceType } from 'typegoose';
 
 export interface ICleanMvpData {
     Killed_At: string,
@@ -28,29 +21,24 @@ export interface ICleanMvpData {
   };
 
 export interface IMvpData {
-    when: Date;
-    who: string;
-    mvp: string;
+    killedAt: Date;
+    killedBy: string;
+    mvpName: string;
     mapName: string;
-    respawn: Date;
-    timer$: Observable<[number, number, number]>;
-    key: string;
 }
 
 const env = process.env.NODE_ENV || 'dev';
 
-const webhookSuffix = process.env.WEBHOOK_URL || '460939241292300299/3SeBHlQ-VjnjYgKlc86YVs9V9aiU4Tekjjz7LETXewDghRxk2wLru5wP3H92r7jegqCq';
+const webhookSuffix = /* process.env.WEBHOOK_URL ||*/ '460939241292300299/3SeBHlQ-VjnjYgKlc86YVs9V9aiU4Tekjjz7LETXewDghRxk2wLru5wP3H92r7jegqCq';
 const webhookUrl = `https://discordapp.com/api/webhooks/${webhookSuffix}`;
 
 const webhook = new Webhook(webhookUrl);
 
 const whitelistedMaps = Object.keys(metadata.map);
 
-const whitelistedMvps = Object.keys(metadata.mvp);
-
 const PORT = process.env.PORT || 3000;
 
-export const mvpMap = new Map<string, IMvpData>();
+export const mvpMap = new Map<string, InstanceType<MvpRecord>>();
 
 /** tells anything listening on this key to stop */
 const finishBroadcast$ = new Subject<string>();
@@ -59,8 +47,10 @@ const s = new http.Server(async (req, res) => {
     var latest = [];
 
     mvpMap.forEach(d => {
-        latest.push(Utils.getCleanJson(d));
+        latest.push(d.toJSON());
     });
+
+    latest = orderBy(latest, l => l.Respawn_DT);
 
     res.end(JSON.stringify(latest));
 });
@@ -71,7 +61,7 @@ s.listen(PORT, (err) => {
     }
 });
 
-function getMvpData(): Promise<IMvpData[]> {
+function getMvpData(): Promise<InstanceType<MvpRecord>[]> {
     return new Promise(resolve => {
         var x = Xray();
 
@@ -80,35 +70,57 @@ function getMvpData(): Promise<IMvpData[]> {
                 console.error(err);
                 throw err;
             }
-            var data: IMvpData[] = parse(table);
 
-            return resolve(data);
+            var data: IMvpData[] = parse(table);
+            var mvprs = data.map(d => {
+                return new MvpRecordModel().assignMvpData(d);
+            });
+
+            return resolve(mvprs);
         });
     });
 }
 
 async function getAndUpdate() {
+    var records: InstanceType<MvpRecord>[];
+    if (mvpMap.size === 0) {
+        records = await Utils.loadMvpRecords();
+        records.forEach(r => update(r));
+    }
+
     var data = await getMvpData();
-    console.log('latest data', data);
 
     data.forEach((next) => update(next));
+
+    var latest = [];
+
+    mvpMap.forEach(m => {
+        latest.push(m.toJSON());
+    })
+
+    console.log('latest data', latest);
 }
 
-export function update(data: IMvpData) {
-    let existing = mvpMap.get(data.key);
-    let cached = existing && existing.respawn.getTime();
+export function update(data: InstanceType<MvpRecord>) {
+    let key = data.getKey();
+    let existing = mvpMap.get(key);
+    let cached = existing && existing.getMinRespawnTime();
 
     //if our new spawn time is before our old, update
-    if (!cached || cached < data.respawn.getTime()) {
-        mvpMap.set(data.key, data);
-        var msg = `${data.mvp} was killed by ${data.who} and will respawn ${moment(data.respawn).fromNow()}`;
+    if (!cached || cached < data.getMinRespawnTime()) {
+        mvpMap.set(key, data);
 
-        Utils.broadcast(webhook, 'MVP Killed', msg);
+        if (data.isNew) {
+            var msg = `${data.Mvp_Name} was killed by ${data.Killed_By} and will respawn ${moment(data.getMinRespawnTime()).fromNow()}`;
+            console.debug('saving new record new');
+            Utils.broadcast(webhook, 'MVP Killed', msg);
+            data.save();
+        }
 
-        beginWatch(data.key, data);
+
+        beginWatch(key, data);
     }
 }
-
 
 Observable.timer(0, 30 * 1000)
     .subscribe(() => {
@@ -116,10 +128,10 @@ Observable.timer(0, 30 * 1000)
         getAndUpdate();
     })
 
-export function beginWatch(key: string, data: IMvpData): void {
+export function beginWatch(key: string, data: InstanceType<MvpRecord>): void {
     finishBroadcast$.next(key);
 
-    data.timer$
+    data.getTimer()
         .takeUntil(finishBroadcast$.filter(k => k === key))
         .switchMap(z => {
             return Promise.resolve(new Date().getTime());
@@ -130,10 +142,8 @@ export function beginWatch(key: string, data: IMvpData): void {
             var minSpawnInMin = minSpawn / 60 / 1000;
             var maxSpawnInMin = maxSpawn / 60 / 1000;
 
-            var spawnWindow: number = metadata.mvp[data.mvp].window;
-
             if (minSpawn <= Utils.notificationThreshold) {
-                const msg = Utils.constructMessage(data.mvp, minSpawnInMin, maxSpawnInMin, data.mapName, data.who);
+                const msg = Utils.constructMessage(data.Mvp_Name, minSpawnInMin, maxSpawnInMin, data.Map_Name, data.Killed_By);
 
                 Utils.broadcast(webhook, 'MVP Spawning Soon', msg);
 
@@ -152,39 +162,25 @@ function parse(table: string) {
 
     var chunks: [string, string, string, string, string][] = chunk(items, 5);
 
-    var data = chunks.map(([murderTime, whoKilled, MVP, exp/*useless*/, mapName]) => {
-        var when = moment.utc(murderTime).toDate();
-        var who = whoKilled;
-        var mvp = MVP;
-        var mapName = mapName;
+    var data = chunks.map(([_killedAt, killedBy, mvpName, exp/*useless*/, mapName]) => {
+        var killedAt = moment.utc(_killedAt).toDate();
+        var killedBy = killedBy;
 
         if (!whitelistedMaps.some(m => m === mapName)) {
             return null;
         }
 
-        var mvpMeta = metadata.mvp[mvp];
-        var timeToRespawn = (mvpMeta && mvpMeta.timer);
-
-        if (!timeToRespawn) {
-            return;
-        }
-
-        var respawn = moment.utc(when).add(timeToRespawn, 'minutes').toDate();
-        var spawnWindow = metadata.mvp[mvp].window
         var data = <IMvpData> {
-            mvp,
-            when,
-            who,
-            respawn,
-            mapName,
-            key: Utils.getKey(mapName, mvp),
-            timer$: Utils.getTimer(respawn, spawnWindow)
+            mvpName,
+            killedAt,
+            killedBy,
+            mapName
         };
 
         return data;
     }).filter(z => !!z);
 
-    return orderBy(data, d => Utils.secondsLeft(d.respawn));
+    return data;
 }
 
 

@@ -1,10 +1,13 @@
 
 interface IMetadata {
-  map: {[index: string]: {}};
+  map: {[index: string]: {
+    timer?: number;
+    window?: number;
+  }};
   mvp: {[index: string]: {
     alias?: string[];
     window?: number;
-    timer: number;
+    timer?: number;
   }}
 }
 export const metadata: IMetadata = {
@@ -13,6 +16,7 @@ export const metadata: IMetadata = {
     'ama_dun03': {},
     'anthell02': {},
     'beach_dun': {},
+    'ein_dun02': {},
     'gef_fild14': {},
     'jupe_core': {},
     'kh_dun02': {},
@@ -62,6 +66,10 @@ export const metadata: IMetadata = {
     },
     'Mistress': {
       timer: 120,
+      window: 10
+    },
+    'RSX-0806': {
+      timer: 125,
       window: 10
     },
     'Samurai Specter': {
