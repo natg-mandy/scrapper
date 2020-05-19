@@ -3,12 +3,12 @@ import * as mongoose from 'mongoose';
 import { metadata } from 'metadata';
 import * as rx from 'rxjs';
 import * as moment from 'moment';
-import { IMvpData, mvpMap } from 'index';
+import { IMvpData, mvpMap, serverTimezone } from 'index';
 interface ITimer {
     timer?: number;
     window?: number;
 }
-const db = /*process.env.DATABASE_URL ||*/ 'mongodb://admin:admin69@ds219181.mlab.com:19181/mvp_mandy';
+const db = process.env.DATABASE_URL || 'mongodb://admin:admin69@ds219181.mlab.com:19181/mvp_mandy';
 console.log(`attempting to connect to '${db}'`);
 
 export const dbconnect = mongoose.connect(db);
@@ -63,8 +63,13 @@ export class MvpRecord extends Typegoose {
     getMinRespawnTime(): number {
         var meta = this.getMeta();
         var ka = this.Killed_At.getTime();
-        var tts = meta.map.timer || (meta.mvp && meta.mvp.timer) || 0;
-        return ka + (tts * 60 * 1000);
+        try {
+            var tts = meta.map.timer || (meta.mvp && meta.mvp.timer) || Infinity;
+            return ka + (tts * 60 * 1000);
+        } catch(e) {
+            console.log("error while getting min respawn time", this.Mvp_Name, this.Map_Name);
+            return Infinity;
+        }
     }
 
     @instanceMethod
@@ -76,7 +81,12 @@ export class MvpRecord extends Typegoose {
     @instanceMethod
     private getWindow() {
         var m = this.getMeta();
-        return m.map.window || m.mvp.window;
+        try {
+            return m.map.window || m.mvp.window;
+        } catch(e) {
+            console.log('error while getting time window', this.Mvp_Name, this.Map_Name);
+            return Infinity;
+        }
     }
 
     @instanceMethod
@@ -107,8 +117,8 @@ export class MvpRecord extends Typegoose {
             Map_Name: this.Map_Name,
             Minutes_Until_Respawn: this.timeUntilSpawn().toFixed(2),
             Killed_By: this.Killed_By,
-            Killed_At: moment(this.Killed_At).tz('GMT').format('LT z'),
-            Respawn_At: moment(this.getMinRespawnTime()).tz('GMT').format('LT z'),
+            Killed_At: moment(this.Killed_At).tz(serverTimezone).format('LT z'),
+            Respawn_At: moment(this.getMinRespawnTime()).tz(serverTimezone).format('LT z'),
             Respawn_DT: this.getMinRespawnTime()
           };
     }

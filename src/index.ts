@@ -38,6 +38,8 @@ const whitelistedMaps = Object.keys(metadata.map);
 
 const PORT = process.env.PORT || 3000;
 
+export const serverTimezone = process.env.TIME_ZONE || 'America/New_York';
+
 export const mvpMap = new Map<string, InstanceType<MvpRecord>>();
 
 /** tells anything listening on this key to stop */
@@ -55,10 +57,10 @@ const s = new http.Server(async (req, res) => {
     res.end(JSON.stringify(latest));
 });
 
-s.listen(PORT, (err) => {
-    if (err) {
+s.listen(PORT, () => {
+    s.on('error', (err) => {
         console.error('error', err);
-    }
+    });
 });
 
 function getMvpData(): Promise<InstanceType<MvpRecord>[]> {
@@ -99,7 +101,7 @@ async function getAndUpdate() {
         latest.push(m.toJSON());
     })
 
-    console.log('latest data', latest);
+    // console.log('latest data', latest);
 }
 
 export function update(data: InstanceType<MvpRecord>) {
@@ -167,21 +169,21 @@ function parse(table: string) {
     var chunks: [string, string, string, string, string][] = chunk(items, 5);
 
     var data = chunks.map(([_killedAt, killedBy, mvpName, exp/*useless*/, mapName]) => {
-        var killedAt = moment.utc(_killedAt).toDate();
+        var killedAt = moment(_killedAt).tz(serverTimezone).toDate();
         var killedBy = killedBy;
 
         if (!whitelistedMaps.some(m => m === mapName)) {
             return null;
         }
 
-        var data = <IMvpData> {
+        var d = <IMvpData> {
             mvpName,
             killedAt,
             killedBy,
             mapName
         };
 
-        return data;
+        return d;
     }).filter(z => !!z);
 
     return data;
