@@ -33,7 +33,15 @@ export const metadata: IMetadata = {
     'prt_sewb4': {},
     'ra_san05': {},
     'thor_v03': {},
-    'tur_dun04': {}
+    'tur_dun04': {},
+    'dic_dun02': {
+        timer: Infinity,
+        window: Infinity
+    },
+    'bra_dun02': {
+        timer: Infinity,
+        window: Infinity
+    }
   },
   mvp: {
     'Amon Ra': {
@@ -67,6 +75,10 @@ export const metadata: IMetadata = {
     'Mistress': {
       timer: 120,
       window: 10
+    },
+    'Orc Hero': {
+        timer: Infinity,
+        window: Infinity
     },
     'RSX-0806': {
       timer: 125,

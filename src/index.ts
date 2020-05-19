@@ -29,7 +29,7 @@ export interface IMvpData {
 
 const env = process.env.NODE_ENV || 'dev';
 
-const webhookSuffix = /* process.env.WEBHOOK_URL ||*/ '460939241292300299/3SeBHlQ-VjnjYgKlc86YVs9V9aiU4Tekjjz7LETXewDghRxk2wLru5wP3H92r7jegqCq';
+const webhookSuffix = process.env.WEBHOOK_URL || '712381590554017873/EB4KTbIT1ONfR2q6mbTpr3XSc9483Cq2SjRJYBmJYOmRYEfyeodptMTxl1CNrgzALCGa';
 const webhookUrl = `https://discordapp.com/api/webhooks/${webhookSuffix}`;
 
 const webhook = new Webhook(webhookUrl);
@@ -64,8 +64,9 @@ s.listen(PORT, (err) => {
 function getMvpData(): Promise<InstanceType<MvpRecord>[]> {
     return new Promise(resolve => {
         var x = Xray();
+        const url = process.env.TABLE_URL = 'https://reveriero.com/?module=ranking&action=mvp';
 
-        x('https://obsidianro.com/panel/?module=ranking&action=mvp', 'table.horizontal-table')((err, table) => {
+        x(url, 'table.horizontal-table')((err, table) => {
             if (err) {
                 console.error(err);
                 throw err;
@@ -105,9 +106,10 @@ export function update(data: InstanceType<MvpRecord>) {
     let key = data.getKey();
     let existing = mvpMap.get(key);
     let cached = existing && existing.getMinRespawnTime();
+    const mrt = data.getMinRespawnTime();
 
     //if our new spawn time is before our old, update
-    if (!cached || cached < data.getMinRespawnTime()) {
+    if (!cached || cached < mrt) {
         mvpMap.set(key, data);
 
         if (data.isNew) {

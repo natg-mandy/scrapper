@@ -63,7 +63,7 @@ export class MvpRecord extends Typegoose {
     getMinRespawnTime(): number {
         var meta = this.getMeta();
         var ka = this.Killed_At.getTime();
-        var tts = meta.map.timer || meta.mvp.timer;
+        var tts = meta.map.timer || (meta.mvp && meta.mvp.timer) || 0;
         return ka + (tts * 60 * 1000);
     }
 
@@ -107,8 +107,8 @@ export class MvpRecord extends Typegoose {
             Map_Name: this.Map_Name,
             Minutes_Until_Respawn: this.timeUntilSpawn().toFixed(2),
             Killed_By: this.Killed_By,
-            Killed_At: moment(this.Killed_At).tz('America/New_York').format('LT z'),
-            Respawn_At: moment(this.getMinRespawnTime()).tz('America/New_York').format('LT z'),
+            Killed_At: moment(this.Killed_At).tz('GMT').format('LT z'),
+            Respawn_At: moment(this.getMinRespawnTime()).tz('GMT').format('LT z'),
             Respawn_DT: this.getMinRespawnTime()
           };
     }
