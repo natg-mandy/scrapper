@@ -35,6 +35,6 @@
     "x-ray": "^2.3.3"
   },
   "devDependencies": {
-    "webpack-dev-server": "^2.7.1"
+    "webpack-dev-server": "^3.1.11"
   }
 }
