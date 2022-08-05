@@ -23,7 +23,7 @@
     "moment": "^2.22.2",
     "moment-timezone": "^0.5.21",
     "mongodb": "^3.1.0",
-    "mongoose": "^5.1.7",
+    "mongoose": "^5.7.5",
     "reflect-metadata": "^0.1.12",
     "rxjs": "5.5.10",
     "ts-loader": "^2.2.2",
